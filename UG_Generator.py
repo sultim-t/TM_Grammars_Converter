@@ -3,6 +3,8 @@ import random
 
 def main(argv):
     
+    argv.append("grammar.txt")
+
     if len(argv) < 2:
         print('Expected input: <input_unrestricted_grammar_file>')
         return
@@ -27,12 +29,16 @@ def main(argv):
     for line in lines:
         splitted = line.split('->')
 
+        # add spaces on the left and right (if needed),
+        # also check if tail is epsilon 
         head = ' ' + splitted[0] if len(splitted) == 2 else ' ' + splitted[0] + ' '
-        tail = splitted[1] + ' ' if len(splitted) == 2 else '' # check epsilon
+        tail = splitted[1] + ' ' if len(splitted) == 2 else ''
 
         heads.append(head)
 
         productions.append((head, tail))
+
+    nonTerminals = getNonTerminals(heads) 
 
     # generate words from steps 1-5, which contain non-determinism.
     # in this program non-determinism is not used,
@@ -41,9 +47,8 @@ def main(argv):
     initialWords = []
     ndProductions = productions[0:5] # copy first 5 productions
 
-    # adding blank symbol to the left of word 
-    # as grammar that simulates TM works only on a half of the line
-    initialNt = ' (,_) A1 '
+    # initial non-terminal
+    initialNt = ' A1 '
 
     for i in range(1, wordsAmount + 1):
         word = initialNt
@@ -61,41 +66,58 @@ def main(argv):
 
     # actual simulation of the grammar
     for i in range(0, wordsAmount):
-        current = initialWords[i]
         
-        finished = True
+        # adding blank symbol to the left of word 
+        # as grammar that simulates TM works only on a half of the line
+        current =  ' (,_)' + initialWords[i]
+        
+        error = False
 
         # while there are non terminals
-        while containsNonTerminal(current, heads):
-
-            # save previous
-            prev = str(current)
+        while containsNonTerminal(current, nonTerminals):
+            simulated = False
 
             # check each production
             for head, tail in productions:
-                current = simulateProduction(current, head, tail)
+                (current, wasSimulated) = simulateProduction(current, head, tail)
+                simulated = simulated or wasSimulated
 
-            # if word doesn't change, but word contain non terminals
-            # then error
-            if prev == current:
-                finished = False
+                if wasSimulated:
+                    # to prevent non-determinism when
+                    # replacing to epsilon (step 10),
+                    # we assume that it will be the last production in a list
+                    break
+
+            # if there is no simulation but there are non-terminals
+            if not simulated:
                 break
 
-        # print only finished generated words
-        if (finished):
-            printTMWord(current)
+        # there are no non-terminals and there are no productions to simulate
+        if simulated:
+
+            # remove first (,_) that was added
+            current = current.replace('(,_)', '', 1)
+            
+            printResult(current)
 
 def simulateProduction(current, head, tail):
+    wasSimulated = False
+
     # while head is contained by current
     while head in current:
         current = current.replace(head, tail, 1)
+        wasSimulated = True
+
         #print(current)
         #printTM(current)
 
-    return current
+    return (current, wasSimulated)
 
 def simulateProductionLimited(current, head, tail, limit):
-    '''Same as simulateProduction, but number of replacements of current production is limited'''
+    '''
+    Try to simulate production, but number of replacements of current production is limited.
+    Use this to prevent endless replacements.
+    '''
     iteration = 0
     while head in current and iteration < limit:
         current = current.replace(head, tail, 1)
@@ -105,8 +127,15 @@ def simulateProductionLimited(current, head, tail, limit):
 
     return current
 
-def containsNonTerminal(str, productionHeads):
+def containsNonTerminal(str, nonTerminals):
+    # ignore first non terminal, as it's '(,_)'
+    str = str.replace('(,_)', '', 1)
+
+    return any(nonTerm in str for nonTerm in nonTerminals)
+
+def getNonTerminals(productionHeads):
     nonTerminals = set()
+
     for head in productionHeads:
         ws = set(head.split(' '));
         nonTerminals = nonTerminals.union(ws)
@@ -115,13 +144,13 @@ def containsNonTerminal(str, productionHeads):
     if '' in nonTerminals:
         nonTerminals.remove('')
 
-    # ignore first non terminal, as it's '(,_)'
-    str = str.replace('(,_)', '', 1)
-
-    return any(nonTerm in str for nonTerm in nonTerminals)
+    return nonTerminals
 
 def printTM(str):
-    '''Print turing machine's line'''
+    '''
+    Print turing machine's line. 
+    I.e. prints only second part of tuples in str
+    '''
     out = ''
     splitted = str.split(' ')
     for s in splitted:
@@ -131,19 +160,10 @@ def printTM(str):
             out += tuple[1]
     print(out)
 
-def printTMWord(str):
-    '''Print turing machine's initial word. Ignores spaces and first '(,_)' in the beginning'''
-    out = ''
-    splitted = str.split(' ')
-
-    if '(,_)' in splitted:
-        splitted.remove('(,_)')
-
-    for s in splitted:
-        out += s
-
-    print(out)
-
+def printResult(str):
+    '''Removes spaces and prints result'''
+    out = str.replace(' ', '')
+    print("Result: " + out)
 
 # call main method
 main(sys.argv)
