@@ -1,6 +1,16 @@
 # Turing machine to Grammars Converter
 Converter from turing machine to unrestricted and context-sensitive grammars.
 
+# Usage
+Programs use Python 3.7.3
+Firstly, create unrestricted grammar:
+```
+TM_UG_Converter.py isprime.txt genGrammar.txt
+```
+Then generate prime numbers from this grammar:
+```
+UG_Generator.py genGrammar.txt
+```
 # Unrestricted grammars
 ## Converter 
 TM_UG_Converter.py is a converter from turing machine to unrestricted grammar.
