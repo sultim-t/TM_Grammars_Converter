@@ -54,7 +54,7 @@ def main(argv):
     symbols = set(blank)
 
     # alphabet, must be an subset of tape symbols
-    alphabet = set('I')
+    alphabet = set('1')
 
     alphabetWithEps = alphabet.copy()
     alphabetWithEps.add('')
