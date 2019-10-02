@@ -3,8 +3,6 @@ import random
 
 def main(argv):
     
-    argv.append('glba.txt')
-
     if len(argv) < 2:
         print('Expected input: <input_unrestricted_grammar_file>')
         return

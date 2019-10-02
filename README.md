@@ -5,7 +5,7 @@ Converter from turing machine to unrestricted and context-sensitive grammars.
 Programs use Python 3.7.3
 Firstly, create unrestricted grammar:
 ```
-TM_UG_Converter.py isprime.txt genGrammar.txt
+TM_UG_Converter.py LBA.txt genGrammar.txt
 ```
 Then generate prime numbers from this grammar:
 ```
