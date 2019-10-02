@@ -46,18 +46,18 @@ def main(argv):
     # all final state names must start with 'halt'
     finalStatePrefix = 'halt'
 
-    blank = '_'
     leftSymb = 'l'
     rightSymb = 'r'
 
     # tape symbols, this set always has blank
-    symbols = set(blank)
+    symbols = set()
 
     # alphabet, must be an subset of tape symbols
-    alphabet = set('1')
+    alphabet = {'1', '$'}
 
     alphabetWithEps = alphabet.copy()
-    alphabetWithEps.add('')
+    # epsilon is not used in current LBA
+    #alphabetWithEps.add('')
 
     states = set()
     finalStates = set()
@@ -86,7 +86,7 @@ def main(argv):
             finalStates.add(rule.endState)
 
     print('TM alphabet: ' + str(alphabet))
-    print('TM blank symbol is \'' + blank + '\'')
+
     print('TM line symbols: ' + str(symbols) + '\n')
     print('TM states amount: ' + str(len(states)))
     print('TM initial state is \'' + initialState + '\'')
@@ -98,24 +98,25 @@ def main(argv):
     # create grammar
     productions = []
 
-    # 1
+    # 1 - initial state
     productions.append(
         Production('A1', initialState + ' ' + 'A2'))
 
-    # 2
+    # 2 - generate words
     productions += [
         Production('A2', '({},{}) A2'.format(a, a))
         for a in alphabet]
 
-    # 3
+    # 3 - stop non-deterministic word generating
     productions.append(
         Production('A2', 'A3'))
 
-    # 4
-    productions.append(
-        Production('A3', '(,{}) A3'.format(blank)))
+    # 4 - add blanks
+    # blanks are not used in current LBA
+    #productions.append(
+    #    Production('A3', '(,{}) A3'.format(blank)))
     
-    # 5
+    # 5 - stop generating blanks
     productions.append(
         Production('A3', ''))
 
@@ -131,33 +132,38 @@ def main(argv):
             productions += [
                 Production('{} ({},{})'.format(q, a, A), 
                            '({},{}) {}'.format(a, M, p))
-                for a in alphabetWithEps]
+                for a in alphabetWithEps if (a != '$' and A != '$') or (a == '$' and A == '$')]
+                # can't be: '($,*)' where * is not '$'
+
         else:
             productions += [
                 Production('({},{}) {} ({},{})'.format(b,C,q,a,A), 
                            '{} ({},{}) ({},{})'.format(p,b,C,a,M))
-                for a in alphabetWithEps
+                for a in alphabetWithEps if (a != '$' and A != '$') or (a == '$' and A == '$')
                 for b in alphabetWithEps
-                for C in symbols]
+                for C in symbols if (b != '$' and C != '$') or (b == '$' and C == '$')]
 
             
-    # 8, 9
+    # 8, 9 - collapse
     for a in alphabetWithEps:
         for C in symbols:
-            for q in finalStates:
-                head8 = '({},{}) {}'.format(a, C, q)
-                head9 = '{} ({},{})'.format(q, a, C)
-                tail = '{} {} {}'.format(q, a, q)
+            if (a != '$' and C != '$') or (a == '$' and C == '$'):
+                
+                for q in finalStates:
+                    head8 = '({},{}) {}'.format(a, C, q)
+                    head9 = '{} ({},{})'.format(q, a, C)
+                    tail = '{} {} {}'.format(q, a, q)
 
-                productions.append(
-                    Production(head8, tail))
-                productions.append(
-                    Production(head9, tail))
+                    productions.append(Production(head8, tail))
+                    productions.append(Production(head9, tail))
 
     # 10
     productions += [
         Production(q, '')
         for q in finalStates]
+
+    # optimization
+
 
     print('UG productions amount: ' + str(len(productions)) + '\n')
 
