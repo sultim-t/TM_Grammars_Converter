@@ -3,6 +3,7 @@ Converter from turing machine to unrestricted and context-sensitive grammars.
 
 # Usage
 Programs use Python 3.7.3
+
 Firstly, create unrestricted grammar:
 ```
 TM_UG_Converter.py lba.txt glba.txt
@@ -21,6 +22,7 @@ TM_UG_Converter.py is a converter from turing machine to unrestricted grammar.
 
 #### Input
 Input format: <input_turing_machine_file> <output_unrestricted_grammar_file>
+
 'input_turing_machine_file' must contain delta functions of turing machine.
 Syntax and simulator for turing machine: http://corelab.ntua.gr/tm/
 
@@ -32,8 +34,12 @@ UG_Generator.py is a word generator for unrestricted grammar.
 
 #### Input
 Input format: <input_unrestricted_grammar_file> <number_to_check>
+
 Or: <input_unrestricted_grammar_file> <range_start_inclusive> <range_end_inclusive>
+
 'input_turing_machine_file' is a file which contains created unrestricted grammar from TM_UG_Converter.
 
 #### Output
-UG_Generator prints several generated words for specified unrestricted grammar.
+UG_Generator prints generated words for specified unrestricted grammar.
+
+Also, log file is generated with suffix '_Log.txt'.
