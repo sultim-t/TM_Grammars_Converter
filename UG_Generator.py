@@ -3,18 +3,21 @@ import random
 
 def main(argv):
     
-    if len(argv) < 2:
-        print('Expected input: <input_unrestricted_grammar_file>')
+    if len(argv) < 3:
+        print('Expected input:\n  <input_unrestricted_grammar_file> <number_to_check> or \n  <input_unrestricted_grammar_file> <range_start> <range_end>')
         return
-    
-    # how many space there needed after a word;
-    # f.e.: if word is 'II' but 
-    # number of blanks that uses TM is five times larger,
-    # then multiplier must be 5
-    lineMultiplier = 5
+
+    numbersToCheck = []
+
+    if (len(argv) == 3):
+        numbersToCheck.append(int(argv[2]))
+    else:
+        numbersToCheck = range(int(argv[2]), int(argv[3]) + 1)
    
     with open(argv[1]) as f:
         lines = f.readlines()
+
+    logText = []
 
     lines = [x.strip() for x in lines]
 
@@ -35,24 +38,23 @@ def main(argv):
 
     nonTerminals = getNonTerminals(heads) 
 
+
+
     initialWords = []
+    results = []
 
     # assume, that result of first 5 types of non deterministic productions
-    initialWords.append(' 0 ($,$) (1,1) ($,$) ')
-    initialWords.append(' 0 ($,$) (1,1) (1,1) ($,$) ')
-    initialWords.append(' 0 ($,$) (1,1) (1,1) (1,1) ($,$) ')
-    initialWords.append(' 0 ($,$) (1,1) (1,1) (1,1) (1,1) ($,$) ')
-    initialWords.append(' 0 ($,$) (1,1) (1,1) (1,1) (1,1) (1,1) ($,$) ')
-    initialWords.append(' 0 ($,$) (1,1) (1,1) (1,1) (1,1) (1,1) (1,1) ($,$) ')
-    initialWords.append(' 0 ($,$) (1,1) (1,1) (1,1) (1,1) (1,1) (1,1) (1,1) ($,$) ')
+    for i in range(0, len(numbersToCheck)):
+        amount = '(1,1) ' * numbersToCheck[i]
+        initialWords.append(' 0 ($,$) ' + amount + '($,$) ')
 
     # actual simulation of the grammar
     for i in range(0, len(initialWords)):
+
+        current = initialWords[i]
         
-        # adding blank symbol to the left of word 
-        # as grammar that simulates TM works only on a half of the line
-        current =  ' (,_)' + initialWords[i]
-        
+        logText.append('Created word: \"' + current + '\". Processing...\n')
+
         error = False
 
         # while there are non terminals
@@ -65,6 +67,10 @@ def main(argv):
                 simulated = simulated or wasSimulated
 
                 if wasSimulated:
+                    logText.append('Using: ' + head + '->' + tail + ':\n' + current + '\n\n')
+
+                    # if was simulated, start from the beginning of the production list
+
                     # to prevent non-determinism when
                     # replacing to epsilon (step 10),
                     # we assume that it will be the last production in a list
@@ -74,13 +80,15 @@ def main(argv):
             if not simulated:
                 break
 
+        # simulated is True if
         # there are no non-terminals and there are no productions to simulate
-        if simulated:
+        printResult(current, numbersToCheck[i], simulated)
 
-            # remove first (,_) that was added
-            current = current.replace('(,_)', '', 1)
-            
-            printResult(current)
+        logText.append('\n\n\n')
+
+    # write log to file
+    with open(argv[1] + '_Log.txt', 'w+') as logFile:
+        logFile.writelines(logText)
 
 def simulateProduction(current, head, tail):
     wasSimulated = False
@@ -110,9 +118,6 @@ def simulateProductionLimited(current, head, tail, limit):
     return current
 
 def containsNonTerminal(str, nonTerminals):
-    # ignore first non terminal, as it's '(,_)'
-    str = str.replace('(,_)', '', 1)
-
     return any(nonTerm in str for nonTerm in nonTerminals)
 
 def getNonTerminals(productionHeads):
@@ -142,10 +147,11 @@ def printTM(str):
             out += tuple[1]
     print(out)
 
-def printResult(str):
+def printResult(current, number, isPrime):
     '''Removes spaces and prints result'''
-    out = str.replace(' ', '')
-    print("Result: " + out)
+    out = current
+    print(str(number) + ' is ' + ('    PRIME' if isPrime else 'NOT prime') + 
+          ('. Grammar result:' + out if isPrime else '. Word has non terminals but hasn\'t needed productions'))
 
 # call main method
 main(sys.argv)

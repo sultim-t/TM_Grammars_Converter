@@ -63,6 +63,8 @@ def main(argv):
     finalStates = set()
     rules = []
 
+    leftSymbolForState = dict()
+
     print('Parsing turing machine rules...\n')
 
     for line in lines:
@@ -80,6 +82,12 @@ def main(argv):
         # add states
         states.add(rule.startState)
         states.add(rule.endState)
+
+        if not rule.endState in leftSymbolForState:
+            leftSymbolForState[rule.endState] = set()
+
+        if rule.direction == Direction.Right:
+            leftSymbolForState[rule.endState].add(rule.nextSymb)
 
         # check if final state
         if rule.endState.startswith(finalStatePrefix):
@@ -141,7 +149,9 @@ def main(argv):
                            '{} ({},{}) ({},{})'.format(p,b,C,a,M))
                 for a in alphabetWithEps if (a != '$' and A != '$') or (a == '$' and A == '$')
                 for b in alphabetWithEps
-                for C in symbols if (b != '$' and C != '$') or (b == '$' and C == '$')]
+                for C in symbols if ((b != '$' and C != '$') or (b == '$' and C == '$'))
+                    and (C in leftSymbolForState[q] or len(leftSymbolForState[q]) == 0)
+                    ]
 
             
     # 8, 9 - collapse
