@@ -177,8 +177,6 @@ def main(argv):
         Production(q, '')
         for q in finalStates]
 
-    # optimization
-
 
     print('UG productions amount: ' + str(len(productions)) + '\n')
 

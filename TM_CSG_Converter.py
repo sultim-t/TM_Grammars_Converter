@@ -6,12 +6,12 @@ class Direction(Enum):
     Right = 1
 
 class Rule:
-    def __init__(self, startState, curSymb, nextSymb, direction, endState):
-        self.startState = startState
+    def __init__(self, curState, curSymb, nextSymb, direction, nextState):
+        self.curState = curState
         self.curSymb = curSymb
         self.nextSymb = nextSymb
         self.direction = direction
-        self.endState = endState
+        self.nextState = nextState
 
 class Production:
     def __init__(self, head, tail):
@@ -43,22 +43,21 @@ def main(argv):
              and len(x) != 0]
 
     # let initial state be '0'
-    initialState = '0'
+    q0 = '0'
     # all final state names must start with 'halt'
     finalStatePrefix = 'halt'
 
     leftSymb = 'l'
     rightSymb = 'r'
 
-    # tape symbols, this set always has blank
-    symbols = set()
+    lm = 'c'
+    rm = '$'
 
-    # alphabet, must be an subset of tape symbols
-    alphabet = {'1', '$', 'c'}
-
-    alphabetWithEps = alphabet.copy()
-    # epsilon is not used in current LBA
-    #alphabetWithEps.add('')
+    alphabet = {'1', rm, lm}
+    alphabetWM = {'1'}
+    
+    gamma = set()
+    gammaWM = set()
 
     states = set()
     finalStates = set()
@@ -75,36 +74,267 @@ def main(argv):
 
         rule = Rule(delta[0], delta[1], delta[2], dir, delta[4])
         rules.append(rule)
-
-        # add any symbol to tape symbols
-        symbols.add(rule.curSymb)
-        symbols.add(rule.nextSymb)
         
         # add states
-        states.add(rule.startState)
-        states.add(rule.endState)
+        states.add(rule.curState)
+        states.add(rule.nextState)
 
-        if not rule.endState in leftSymbolForState:
-            leftSymbolForState[rule.endState] = set()
+        gamma.add(rule.curSymb)
+        gamma.add(rule.nextSymb)
+
+        if not rule.nextState in leftSymbolForState:
+            leftSymbolForState[rule.nextState] = set()
 
         if rule.direction == Direction.Right:
-            leftSymbolForState[rule.endState].add(rule.nextSymb)
+            leftSymbolForState[rule.nextState].add(rule.nextSymb)
 
         # check if final state
-        if rule.endState.startswith(finalStatePrefix):
-            finalStates.add(rule.endState)
+        if rule.nextState.startswith(finalStatePrefix):
+            finalStates.add(rule.nextState)
+
+    gammaWM = gamma.copy()
+    gammaWM.remove(lm)
+    gammaWM.remove(rm)
 
     print('TM alphabet: ' + str(alphabet))
 
-    print('TM line symbols: ' + str(symbols) + '\n')
+    print('TM gamma: ' + str(gamma) + '\n')
     print('TM states amount: ' + str(len(states)))
-    print('TM initial state is \'' + initialState + '\'')
+    print('TM initial state is \'' + q0 + '\'')
     print('TM final states: ' + str(finalStates) + '\n')
     print('TM rules amount: ' + str(len(rules)) + '\n')
     
     print('Creating context sensitive grammar productions...')
 
+    # create grammar
+    productions = []
+
+    # 1 - initial state
+    productions += [
+        Production('A1', 
+                   '[{},{},{},{},{}]'.format(q0, lm, a, a, rm))
+        for a in alphabetWM]
+
+    # 2
+    for rule in rules:
+        q = rule.curState
+
+        if q in finalStates:
+            continue
+
+        p = rule.nextState
+        X = rule.curSymb
+        Y = rule.nextSymb
+
+        if rule.direction == Direction.Right:
+            if X == lm and Y == lm:
+                productions += [
+                    Production('[{},{},{},{},{}]'.format(q,lm,I,a,rm),
+                               '[{},{},{},{},{}]'.format(lm,p,I,a,rm))
+                    for a in alphabetWM
+                    for I in gammaWM]
+            else:
+                productions += [
+                    Production('[{},{},{},{},{}]'.format(lm,q,X,a,rm),
+                               '[{},{},{},{},{}]'.format(lm,Y,a,p,rm))
+                    for a in alphabetWM]
+            
+        else:
+            if X == rm and Y == rm:
+                productions += [
+                    Production('[{},{},{},{},{}]'.format(lm,I,a,q,rm),
+                               '[{},{},{},{},{}]'.format(lm,p,I,a,rm))
+                    for a in alphabetWM
+                    for I in gammaWM]
+            else:
+                productions += [
+                    Production('[{},{},{},{},{}]'.format(lm,q,X,a,rm),
+                               '[{},{},{},{},{}]'.format(p,lm,Y,a,rm))
+                    for a in alphabetWM]
     
+    # 3
+    for q in finalStates:
+        for a in alphabetWM:
+            for X in gammaWM:
+                productions.append(
+                    Production('[{},{},{},{},{}]'.format(q,lm,X,a,rm),
+                               '{}'.format(a)))
+
+                productions.append(
+                    Production('[{},{},{},{},{}]'.format(lm,q,X,a,rm),
+                               '{}'.format(a)))
+
+                productions.append(
+                    Production('[{},{},{},{},{}]'.format(lm,X,a,q,rm),
+                               '{}'.format(a)))
+
+
+    # 4
+    for a in alphabetWM:
+        productions.append(
+            Production('A1',
+                       '[{},{},{},{}] A2'.format(q0,lm,a,a)))
+
+        productions.append(
+            Production('A2',
+                       '[{},{}] A2'.format(a,a)))
+
+        productions.append(
+            Production('A2',
+                       '[{},{},{}]'.format(a,a,rm)))
+
+    # 5
+    for rule in rules:
+        q = rule.curState
+
+        if q in finalStates:
+            continue
+
+        p = rule.nextState
+        X = rule.curSymb
+        Y = rule.nextSymb
+
+        if rule.direction == Direction.Right:
+            
+            if X == lm and Y == lm:
+                productions += [
+                    Production('[{},{},{},{}]'.format(q,lm,I,a),
+                               '[{},{},{},{}]'.format(lm,p,I,a))
+                    for a in alphabetWM
+                    for I in gammaWM]
+            else:
+                productions += [
+                    Production('[{},{},{},{}] [{},{}]'.format(lm,q,X,a,Z,b),
+                               '[{},{},{}] [{},{},{}]'.format(lm,Y,a,p,Z,b))
+                    for a in alphabetWM
+                    for b in alphabetWM
+                    for Z in gammaWM]
+        else:
+            productions += [
+                Production('[{},{},{},{}]'.format(lm,q,X,a),
+                           '[{},{},{},{}]'.format(p,lm,Y,a))
+                for a in alphabetWM]
+
+        # 6
+        if rule.direction == Direction.Right:
+            productions += [
+                Production('[{},{},{}] [{},{}]'.format(q,X,a,Z,b),
+                           '[{},{}] [{},{},{}]'.format(Y,a,p,Z,b))
+                for a in alphabetWM
+                for b in alphabetWM
+                for Z in gammaWM]
+
+            productions += [
+                Production('[{},{},{}] [{},{},{}]'.format(q,X,a,Z,b,rm),
+                           '[{},{}] [{},{},{},{}]'.format(Y,a,p,Z,b,rm))
+                for a in alphabetWM
+                for b in alphabetWM
+                for Z in gammaWM]
+            
+            # if word length is 2
+            productions += [
+                Production('[{},{},{},{}] [{},{},{}]'.format(lm,q,X,a,Z,b,rm),
+                           '[{},{},{}] [{},{},{},{}]'.format(lm,Y,a,p,Z,b,rm))
+                for a in alphabetWM
+                for b in alphabetWM
+                for Z in gammaWM]
+        else:
+            productions += [
+                Production('[{},{}] [{},{},{}]'.format(Z,b,q,X,a),
+                           '[{},{},{}] [{},{}]'.format(p,Z,b,Y,a))
+                for a in alphabetWM
+                for b in alphabetWM
+                for Z in gammaWM]
+
+            productions += [
+                Production('[{},{},{}] [{},{},{}]'.format(lm,Z,b,q,X,a),
+                           '[{},{},{},{}] [{},{}]'.format(lm,p,Z,b,Y,a))
+                for a in alphabetWM
+                for b in alphabetWM
+                for Z in gammaWM]
+
+            # if word length is 2
+            productions += [
+                Production('[{},{},{}] [{},{},{},{}]'.format(lm,Z,b,q,X,a,rm),
+                           '[{},{},{},{}] [{},{},{}]'.format(lm,p,Z,b,Y,a,rm))
+                for a in alphabetWM
+                for b in alphabetWM
+                for Z in gammaWM]
+
+        # 7
+        if rule.direction == Direction.Right:
+            productions += [
+                Production('[{},{},{},{}]'.format(q,X,a,rm),
+                           '[{},{},{},{}]'.format(Y,a,p,rm))
+                for a in alphabetWM]
+        else:
+            if X == rm and Y == rm:
+                productions += [
+                    Production('[{},{},{},{}]'.format(I,a,q,rm),
+                               '[{},{},{},{}]'.format(p,I,a,rm))
+                    for a in alphabetWM
+                    for I in gammaWM]
+            else:
+                productions += [
+                    Production('[{},{}] [{},{},{},{}]'.format(Z,b,q,X,a,rm),
+                               '[{},{},{}] [{},{},{}]'.format(p,Z,b,Y,a,rm))
+                    for a in alphabetWM
+                    for b in alphabetWM
+                    for Z in gammaWM]
+
+    for a in alphabetWM:
+        for X in gammaWM:
+
+            # 8
+            for q in finalStates:
+
+                productions.append(
+                    Production('[{},{},{},{}]'.format(q,lm,X,a), 
+                               a))
+                
+                productions.append(
+                    Production('[{},{},{},{}]'.format(lm,q,X,a), 
+                               a))
+                
+                productions.append(
+                    Production('[{},{},{}]'.format(q,X,a), 
+                               a))
+                
+                productions.append(
+                    Production('[{},{},{},{}]'.format(q,X,a,rm), 
+                               a))
+
+                productions.append(
+                    Production('[{},{},{},{}]'.format(X,a,q,rm), 
+                               a))
+            
+            # 9
+            for b in alphabetWM:
+                productions.append(
+                    Production('{} [{},{}]'.format(a,X,b), 
+                               '{} {}'.format(a,b)))
+                
+                productions.append(
+                    Production('{} [{},{},{}]'.format(a,X,b,rm), 
+                               '{} {}'.format(a,b)))
+                
+                productions.append(
+                    Production('[{},{}] {}'.format(X,a,b), 
+                               '{} {}'.format(a,b)))
+                
+                productions.append(
+                    Production('[{},{},{}] {}'.format(lm,X,a,b), 
+                               '{} {}'.format(a,b)))
+
+
+    print('CSG productions amount: ' + str(len(productions)) + '\n')
+
+    plines = [p.getString() for p in productions]
+
+    print('Writing to file: ' + outputFilePath)
+
+    with open(outputFilePath, 'w') as f:
+        f.writelines(plines)
 
 
 # call main method

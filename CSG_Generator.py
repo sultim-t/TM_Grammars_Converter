@@ -2,9 +2,13 @@ import sys
 import random
 
 def main(argv):
+
+    argv.append('csg.txt')
+    argv.append('1')
+    argv.append('11')
     
     if len(argv) < 3:
-        print('Expected input:\n  <input_unrestricted_grammar_file> <number_to_check> or \n  <input_unrestricted_grammar_file> <range_start> <range_end>')
+        print('Expected input:\n  <input_cs_grammar_file> <number_to_check> or \n  <input_cs_grammar_file> <range_start> <range_end>')
         return
 
     numbersToCheck = []
@@ -22,7 +26,7 @@ def main(argv):
     lines = [x.strip() for x in lines]
 
     productions = []
- 
+
     for line in lines:
         splitted = line.split('->')
 
@@ -44,8 +48,13 @@ def main(argv):
 
     # assume, that result of first 5 types of non deterministic productions
     for i in range(0, len(numbersToCheck)):
-        amount = '(1,1) ' * numbersToCheck[i]
-        initialWords.append(' 0 (c,c) ' + amount + '($,$) ')
+
+        if (numbersToCheck[i] == 1):
+            initialWords.append(' [0,c,1,1,$] ')
+            continue
+
+        amount = '[1,1] ' * (numbersToCheck[i] - 2)
+        initialWords.append(' [0,c,1,1] ' + amount + '[1,1,$] ')
 
     # actual simulation of the grammar
     for i in range(0, len(initialWords)):
@@ -80,7 +89,7 @@ def main(argv):
                 break
 
         # there are no non-terminals but there are no productions to simulate
-        printResult(current, numbersToCheck[i],  not containsNonTerminal(current, nonTerminals))
+        printResult(current, numbersToCheck[i], not containsNonTerminal(current, nonTerminals))
 
         logText.append('\n\n\n')
 

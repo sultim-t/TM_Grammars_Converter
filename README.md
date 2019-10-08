@@ -6,15 +6,15 @@ Programs use Python 3.7.3
 
 Firstly, create unrestricted grammar:
 ```
-TM_UG_Converter.py lba.txt glba.txt
+TM_UG_Converter.py lba.txt ug.txt
 ```
 Then generate prime numbers from this grammar in range from a (inclusive) to b (inclusive):
 ```
-UG_Generator.py lba.txt 2 10
+UG_Generator.py ug.txt 2 10
 ```
 Or just check some number:
 ```
-UG_Generator.py lba.txt 5
+UG_Generator.py ug.txt 5
 ```
 # Unrestricted grammars
 ## Converter 
