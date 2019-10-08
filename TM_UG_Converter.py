@@ -22,6 +22,7 @@ class Production:
         return self.head + ' -> ' + self.tail + '\n'
 
 def main(argv):
+
     if len(argv) < 3:
         print('Expected input: <input_turing_machine_file> <output_unrestricted_grammar_file>')
         return
@@ -53,7 +54,7 @@ def main(argv):
     symbols = set()
 
     # alphabet, must be an subset of tape symbols
-    alphabet = {'1', '$'}
+    alphabet = {'1', '$', 'c'}
 
     alphabetWithEps = alphabet.copy()
     # epsilon is not used in current LBA
@@ -140,16 +141,17 @@ def main(argv):
             productions += [
                 Production('{} ({},{})'.format(q, a, A), 
                            '({},{}) {}'.format(a, M, p))
-                for a in alphabetWithEps if (a != '$' and A != '$') or (a == '$' and A == '$')]
+                for a in alphabetWithEps if (a != '$' and A != '$' and a != 'c' and A != 'c') or (a == '$' and A == '$') or (a == 'c' and A == 'c')]
                 # can't be: '($,*)' where * is not '$'
+                # can't be: '(c,*)' where * is not 'c'
 
         else:
             productions += [
                 Production('({},{}) {} ({},{})'.format(b,C,q,a,A), 
                            '{} ({},{}) ({},{})'.format(p,b,C,a,M))
-                for a in alphabetWithEps if (a != '$' and A != '$') or (a == '$' and A == '$')
+                for a in alphabetWithEps if (a != '$' and A != '$' and a != 'c' and A != 'c') or (a == '$' and A == '$') or (a == 'c' and A == 'c')
                 for b in alphabetWithEps
-                for C in symbols if ((b != '$' and C != '$') or (b == '$' and C == '$'))
+                for C in symbols if ((b != '$' and C != '$' and b != 'c' and C != 'c') or (b == 'c' and C == 'c'))
                     and (C in leftSymbolForState[q] or len(leftSymbolForState[q]) == 0)
                     ]
 
@@ -157,15 +159,18 @@ def main(argv):
     # 8, 9 - collapse
     for a in alphabetWithEps:
         for C in symbols:
-            if (a != '$' and C != '$') or (a == '$' and C == '$'):
+            if (a != '$' and C != '$' and a != 'c' and C != 'c') or (a == '$' and C == '$') or (a == 'c' and C == 'c'):
                 
                 for q in finalStates:
                     head8 = '({},{}) {}'.format(a, C, q)
                     head9 = '{} ({},{})'.format(q, a, C)
                     tail = '{} {} {}'.format(q, a, q)
 
-                    productions.append(Production(head8, tail))
-                    productions.append(Production(head9, tail))
+                    if a != '$':
+                        productions.append(Production(head8, tail))
+
+                    if a != 'c':
+                        productions.append(Production(head9, tail))
 
     # 10
     productions += [

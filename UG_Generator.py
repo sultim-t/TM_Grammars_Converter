@@ -46,7 +46,7 @@ def main(argv):
     # assume, that result of first 5 types of non deterministic productions
     for i in range(0, len(numbersToCheck)):
         amount = '(1,1) ' * numbersToCheck[i]
-        initialWords.append(' 0 ($,$) ' + amount + '($,$) ')
+        initialWords.append(' 0 (c,c) ' + amount + '($,$) ')
 
     # actual simulation of the grammar
     for i in range(0, len(initialWords)):
