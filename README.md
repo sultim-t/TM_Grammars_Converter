@@ -1,14 +1,16 @@
 # Turing machine to Grammars Converter
 Converter from turing machine to unrestricted and context-sensitive grammars.
 
+Note: optimized for LBA that recognizes prime numbers.
+
 # Usage
 Programs use Python 3.7.3
 
-Firstly, create unrestricted grammar:
+To create unrestricted grammar:
 ```
 TM_UG_Converter.py lba.txt ug.txt
 ```
-Then generate prime numbers from this grammar in range from a (inclusive) to b (inclusive):
+Then generate prime numbers from this grammar in range from a (inclusive) to b (inclusive) (a,b are positive integers):
 ```
 UG_Generator.py ug.txt 2 10
 ```
@@ -16,30 +18,40 @@ Or just check some number:
 ```
 UG_Generator.py ug.txt 5
 ```
-# Unrestricted grammars
-## Converter 
+
+Same for context-sensitive grammars:
+```
+TM_CSG_Converter.py lba.txt csg.txt
+CSG_Generator.py csg.txt 2 10
+```
+
+# Info
+## Converters
 TM_UG_Converter.py is a converter from turing machine to unrestricted grammar.
 
-#### Input
-Input format: <input_turing_machine_file> <output_unrestricted_grammar_file>
+TM_CSG_Converter.py is to context-sensitive grammar.
 
-'input_turing_machine_file' must contain delta functions of turing machine.
+#### Input
+Input format: <input_turing_machine_file> <output_grammar_file>
+
+'input_turing_machine_file' must contain delta functions of turing machine. This turing machine must be an LBA with endmarkers 'c' and '$'.
+
 Syntax and simulator for turing machine: http://corelab.ntua.gr/tm/
 
 #### Output
-Output file will contain unrestricted grammar as a list of productions: "<> -> <>"
+Output file will contain unrestricted or context-sensitive grammar as a list of productions: "<> -> <>"
 
-## Generator
+## Generators
 UG_Generator.py is a word generator for unrestricted grammar.
 
+CSG_Generator.py is for context-sensitive grammar.
+
 #### Input
-Input format: <input_unrestricted_grammar_file> <number_to_check>
+Input format: <input_grammar_file> <number_to_check>
 
-Or: <input_unrestricted_grammar_file> <range_start_inclusive> <range_end_inclusive>
-
-'input_turing_machine_file' is a file which contains created unrestricted grammar from TM_UG_Converter.
+Or: <input_grammar_file> <range_start_inclusive> <range_end_inclusive>
 
 #### Output
-UG_Generator prints generated words for specified unrestricted grammar.
+UG_Generator prints generated words for specified unrestricted or context-sensitive grammar.
 
-Also, log file is generated with suffix '_Log.txt'.
+Also, log file is generated and written to file with suffix '_Log.txt'.
