@@ -21,8 +21,8 @@ UG_Generator.py ug.txt 5
 
 Same for context-sensitive grammars:
 ```
-TM_CSG_Converter.py lba.txt csg.txt
-CSG_Generator.py csg.txt 2 10
+TM_CSG_Converter.py lba.txt ncg.txt
+CSG_Generator.py ncg.txt 2 10
 ```
 
 # Info
@@ -30,6 +30,7 @@ CSG_Generator.py csg.txt 2 10
 TM_UG_Converter.py is a converter from turing machine to unrestricted grammar.
 
 TM_CSG_Converter.py is to context-sensitive grammar.
+Actually, to noncontracting grammars as they can be transformed to context-sensitive ones.
 
 #### Input
 Input format: <input_turing_machine_file> <output_grammar_file>
@@ -39,12 +40,12 @@ Input format: <input_turing_machine_file> <output_grammar_file>
 Syntax and simulator for turing machine: http://corelab.ntua.gr/tm/
 
 #### Output
-Output file will contain unrestricted or context-sensitive grammar as a list of productions: "<> -> <>"
+Output file will contain unrestricted or context-sensitive (noncontracting) grammar as a list of productions: "<> -> <>"
 
 ## Generators
 UG_Generator.py is a word generator for unrestricted grammar.
 
-CSG_Generator.py is for context-sensitive grammar.
+CSG_Generator.py is for context-sensitive (noncontracting) grammar.
 
 #### Input
 Input format: <input_grammar_file> <number_to_check>
@@ -52,6 +53,6 @@ Input format: <input_grammar_file> <number_to_check>
 Or: <input_grammar_file> <range_start_inclusive> <range_end_inclusive>
 
 #### Output
-UG_Generator prints generated words for specified unrestricted or context-sensitive grammar.
+UG_Generator prints generated words for specified unrestricted or context-sensitive (noncontracting) grammar.
 
 Also, log file is generated and written to file with suffix '_Log.txt'.

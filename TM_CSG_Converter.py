@@ -64,9 +64,6 @@ class Tree:
     
 def main(argv):
 
-    argv.append('lba.txt')
-    argv.append('ncg.txt')
-
     if len(argv) < 3:
         print('Expected input: <input_turing_machine_file> <output_ncg_grammar_file>')
         return
