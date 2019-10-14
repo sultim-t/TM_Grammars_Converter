@@ -3,10 +3,6 @@ import random
 
 def main(argv):
 
-    argv.append('csg.txt')
-    argv.append('1')
-    argv.append('11')
-    
     if len(argv) < 3:
         print('Expected input:\n  <input_cs_grammar_file> <number_to_check> or \n  <input_cs_grammar_file> <range_start> <range_end>')
         return

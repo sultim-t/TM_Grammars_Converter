@@ -21,10 +21,54 @@ class Production:
     def getString(self):
         return self.head + ' -> ' + self.tail + '\n'
 
+class Tree:
+    def __init__(self, headNt):
+        self.headNt = headNt
+        self.productions = list()
+
+    def findChildren(self, reviewedTrees, allProductions):
+        subtreeNts = set()
+
+        for p in allProductions:
+            hs = p.head.split(' ')
+
+            for h in hs:
+                if self.headNt == h:
+                    ts = set(p.tail.split(' '))
+                    if self.headNt in ts:
+                        ts.remove(self.headNt)
+
+                    # save all tail non-terminals
+                    # that have 'headNt' as a head
+                    subtreeNts = subtreeNts.union(ts)
+
+                    # save production which
+                    # contains 'headNt' of this tree
+                    self.productions.append(p)
+
+                    break
+
+        # find children of all trees
+        for subtreeNt in subtreeNts:
+
+            if subtreeNt in reviewedTrees:
+                continue
+
+            reviewedTrees.add(subtreeNt)
+
+            subtree = Tree(subtreeNt)
+            subtree.findChildren(reviewedTrees, allProductions)
+
+
+            self.productions += subtree.productions
+    
 def main(argv):
 
+    argv.append('lba.txt')
+    argv.append('ncg.txt')
+
     if len(argv) < 3:
-        print('Expected input: <input_turing_machine_file> <output_cs_grammar_file>')
+        print('Expected input: <input_turing_machine_file> <output_ncg_grammar_file>')
         return
 
     inputFilePath = argv[1]
@@ -104,7 +148,7 @@ def main(argv):
     print('TM final states: ' + str(finalStates) + '\n')
     print('TM rules amount: ' + str(len(rules)) + '\n')
     
-    print('Creating context sensitive grammar productions...')
+    print('Creating noncontracting grammar productions...')
 
     # create grammar
     productions = []
@@ -326,16 +370,46 @@ def main(argv):
                     Production('[{},{},{}] {}'.format(lm,X,a,b), 
                                '{} {}'.format(a,b)))
 
+    # optimization
+    root = Tree('A1')
 
-    print('CSG productions amount: ' + str(len(productions)) + '\n')
+    reviewedTrees = set()
+    root.findChildren(reviewedTrees, productions)
 
-    plines = [p.getString() for p in productions]
+    result = list(dict.fromkeys(root.productions))
+
+    result = removeUnnecessary(result)
+
+    print('Noncontracting grammar productions amount: ' + str(len(result)) + '\n')
+
+    plines = [p.getString() for p in result]
 
     print('Writing to file: ' + outputFilePath)
 
     with open(outputFilePath, 'w') as f:
         f.writelines(plines)
+        
+def removeUnnecessary(allProductions):
+    result = list()
 
+    allHeadNts = set()
+    for p in allProductions:
+        allHeadNts = allHeadNts.union(p.head.split(' '))
+
+    for p in allProductions:
+        ts = p.tail.split(' ')
+
+        exist = True
+
+        for t in ts:
+            if t not in allHeadNts and 'prime' not in t:
+                exist = False
+                break
+
+        if exist:
+            result.append(p)
+    
+    return result
 
 # call main method
 main(sys.argv)
