@@ -37,6 +37,9 @@ class Tree:
                     ts = set(p.tail.split(' '))
                     if self.headNt in ts:
                         ts.remove(self.headNt)
+                    
+                    if '1' in ts:
+                        ts.remove('1')
 
                     # save all tail non-terminals
                     # that have 'headNt' as a head
@@ -370,12 +373,12 @@ def main(argv):
     # optimization
     root = Tree('A1')
 
-    reviewedTrees = set()
-    root.findChildren(reviewedTrees, productions)
+    #reviewedTrees = set()
+    #root.findChildren(reviewedTrees, productions)
 
-    result = list(dict.fromkeys(root.productions))
+    #result = list(dict.fromkeys(root.productions))
 
-    result = removeUnnecessary(result)
+    result = removeUnnecessary(productions)
 
     print('Noncontracting grammar productions amount: ' + str(len(result)) + '\n')
 
@@ -387,24 +390,35 @@ def main(argv):
         f.writelines(plines)
         
 def removeUnnecessary(allProductions):
-    result = list()
+    flag = True
 
-    allHeadNts = set()
-    for p in allProductions:
-        allHeadNts = allHeadNts.union(p.head.split(' '))
+    prevProductions = allProductions
+    
+    while flag:
 
-    for p in allProductions:
-        ts = p.tail.split(' ')
+        result = list()
+        allHeadNts = set()
+        flag = False
 
-        exist = True
+        for p in prevProductions:
+            allHeadNts = allHeadNts.union(p.head.split(' '))
 
-        for t in ts:
-            if t not in allHeadNts and 'prime' not in t:
-                exist = False
-                break
+        for p in prevProductions:
+            ts = p.tail.split(' ')
 
-        if exist:
-            result.append(p)
+            exist = True
+
+            for t in ts:
+                if t not in allHeadNts and 'not_prime' not in t:
+                    exist = False
+                    break
+
+            if exist:
+                result.append(p)
+            else:
+                flag = True
+
+        prevProductions = result
     
     return result
 
