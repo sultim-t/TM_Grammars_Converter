@@ -373,12 +373,13 @@ def main(argv):
     # optimization
     root = Tree('A1')
 
-    #reviewedTrees = set()
-    #root.findChildren(reviewedTrees, productions)
+    reviewedTrees = set()
+    root.findChildren(reviewedTrees, productions)
 
-    #result = list(dict.fromkeys(root.productions))
+    result = list(dict.fromkeys(root.productions))
 
-    result = removeUnnecessary(productions)
+    result = removeUnnecessary(result)
+    result = removeUnnecessaryHeads(result)
 
     print('Noncontracting grammar productions amount: ' + str(len(result)) + '\n')
 
@@ -410,6 +411,40 @@ def removeUnnecessary(allProductions):
 
             for t in ts:
                 if t not in allHeadNts and 'not_prime' not in t:
+                    exist = False
+                    break
+
+            if exist:
+                result.append(p)
+            else:
+                flag = True
+
+        prevProductions = result
+    
+    return result
+
+
+def removeUnnecessaryHeads(allProductions):
+    flag = True
+
+    prevProductions = allProductions
+    
+    while flag:
+
+        result = list()
+        allTailNts = set()
+        flag = False
+
+        for p in prevProductions:
+            allTailNts = allTailNts.union(p.tail.split(' '))
+
+        for p in prevProductions:
+            hs = p.head.split(' ')
+
+            exist = True
+
+            for h in hs:
+                if h not in allTailNts and h != 'A1':
                     exist = False
                     break
 
